@@ -93,6 +93,7 @@ function simulateKey(key) {
 }
 
 function addMobileButtons() {
+    if (document.getElementById('mobile-controls')) return;
     // Create a simple overlay for left, right, rotate, down, hard drop
     const controls = document.createElement('div');
     controls.id = 'mobile-controls';

@@ -14,7 +14,7 @@ export function enableMobileCanvasResize() {
 }
 
 function resizeCanvasForMobile() {
-    const canvas = document.getElementById('gameCanvas');
+    if (!canvas) canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
     const margin = 0.98;
     let w = window.innerWidth * margin;
