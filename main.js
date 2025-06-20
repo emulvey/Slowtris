@@ -1,10 +1,20 @@
 import { setupGame, getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY } from './game.js';
 import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry } from './draw.js';
 
-document.addEventListener('DOMContentLoaded', () => {
-    setupGame();
-    animationLoop();
-});
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+if (isMobile()) {
+    import('./mobile.js').then(mod => {
+        mod.setupMobileGame();
+    });
+} else {
+    document.addEventListener('DOMContentLoaded', () => {
+        setupGame();
+        animationLoop();
+    });
+}
 
 function animationLoop() {
     const state = getGameState();
