@@ -21,7 +21,7 @@ function _setupMobileGame() {
     setupGame();
     setContext(document.getElementById('gameCanvas').getContext('2d'), document.getElementById('gameCanvas'));
     setupTouchControls();
-    animationLoop();
+    mobileAnimationLoop();
 }
 
 function setupTouchControls() {
@@ -60,7 +60,7 @@ function setupTouchControls() {
     addMobileButtons();
 }
 
-function animationLoop() {
+function mobileAnimationLoop() {
     const state = getGameState();
     if (state === STATE_TITLE) {
         drawMobileTitleScreen();
@@ -85,7 +85,7 @@ function animationLoop() {
             drawNameEntry(getPlayerName());
         }
     }
-    requestAnimationFrame(animationLoop);
+    requestAnimationFrame(mobileAnimationLoop);
 }
 
 function simulateKey(key) {

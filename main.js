@@ -34,6 +34,19 @@ if (isMobile()) {
 }
 
 function animationLoop() {
+    if (isMobile()) {
+        // If on mobile, redirect to the mobile animation loop
+        import('./mobile.js').then(mod => {
+            console.warn('[Main] animationLoop called on mobile, redirecting to mobileAnimationLoop.');
+            if (typeof mod.mobileAnimationLoop === 'function') {
+                mod.mobileAnimationLoop();
+            } else {
+                // fallback for default export or legacy
+                (mod.default?.mobileAnimationLoop || mod.default?.animationLoop)?.();
+            }
+        });
+        return;
+    }
     const state = getGameState();
     if (state === STATE_TITLE) {
         drawTitleScreen();
