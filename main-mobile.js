@@ -1,36 +1,46 @@
-// Animation frame ID for mobile title screen (must be declared before any function uses it)
-let mobileTitleAnimFrameId = null;
-let lastTitleAnimTime = 0;
+"use strict";
+// main-mobile.js - Refactored for clarity and best practices
 
-import { getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY, STATE_GAMEOVER, handleKeydown } from './game.js';
-import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, drawMobileGameOver, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons, updateMobileTitleBgBlocks } from './draw-mobile.js';
+import {
+    getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName,
+    STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY, STATE_GAMEOVER, handleKeydown
+} from './game.js';
+import {
+    drawGame, drawHighscores, drawNameEntry, drawMobileGameOver,
+    enableMobileCanvasResize, setContext, hideMobileTitleButtons
+} from './draw-mobile.js';
+import { showMobileControls, hideMobileControls } from './mobile-controls.js';
+import { startMobileTitleScreen, stopMobileTitleScreen } from './mobile-title.js';
 
+// --- Constants ---
+const GAME_CANVAS_ID = 'gameCanvas';
+
+// --- Setup ---
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        setupMobileGame();
-    });
+    document.addEventListener('DOMContentLoaded', setupMobileGame);
 } else {
     setupMobileGame();
 }
 
 function setupMobileGame() {
-    console.log('[Mobile] DOM ready, setting up game');
     enableMobileCanvasResize();
-    window.addEventListener('orientationchange', enableMobileCanvasResize);
-    window.addEventListener('resize', enableMobileCanvasResize);
-    setContext(document.getElementById('gameCanvas').getContext('2d'), document.getElementById('gameCanvas'));
-    document.addEventListener('keydown', handleKeydown); // Attach to document for simulated events
-    // Mobile-specific: set initial game state to STATE_TITLE
-    window.mobileTitleBgBlocks = undefined; // Ensure re-init in drawMobileTitleScreen
-    if (typeof window._mobileGameState === 'undefined') {
-        window._mobileGameState = 0; // 0 = STATE_TITLE
+    window.addEventListener('orientationchange', debounce(enableMobileCanvasResize, 100));
+    window.addEventListener('resize', debounce(enableMobileCanvasResize, 100));
+    const canvas = document.getElementById(GAME_CANVAS_ID);
+    if (!canvas) {
+        console.error(`[Mobile] No #${GAME_CANVAS_ID} found.`);
+        return;
     }
-    setupTouchControls();
+    setContext(canvas.getContext('2d'), canvas);
+    document.addEventListener('keydown', handleKeydown);
+    window.mobileTitleBgBlocks = undefined;
+    if (typeof window._mobileGameState === 'undefined') window._mobileGameState = STATE_TITLE;
+    setupTouchControls(canvas);
     mobileAnimationLoop();
 }
 
-function setupTouchControls() {
-    const canvas = document.getElementById('gameCanvas');
+// --- Input Handling ---
+function setupTouchControls(canvas) {
     let startX = 0, startY = 0, moved = false;
     canvas.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
@@ -39,14 +49,9 @@ function setupTouchControls() {
             moved = false;
         }
     });
-    canvas.addEventListener('touchmove', (e) => {
-        moved = true;
-    });
+    canvas.addEventListener('touchmove', () => { moved = true; });
     canvas.addEventListener('touchend', (e) => {
-        if (!moved) {
-            simulateKey('ArrowUp');
-            return;
-        }
+        if (!moved) { simulateKey('ArrowUp'); return; }
         const dx = e.changedTouches[0].clientX - startX;
         const dy = e.changedTouches[0].clientY - startY;
         if (Math.abs(dx) > Math.abs(dy)) {
@@ -58,38 +63,13 @@ function setupTouchControls() {
         }
     });
 }
-
-function startMobileTitleScreen() {
-    if (mobileTitleAnimFrameId) cancelAnimationFrame(mobileTitleAnimFrameId);
-    lastTitleAnimTime = performance.now();
-    mobileTitleScreenAnimLoop();
+function simulateKey(key) {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key }));
 }
 
-function stopMobileTitleScreen() {
-    if (mobileTitleAnimFrameId) {
-        cancelAnimationFrame(mobileTitleAnimFrameId);
-        mobileTitleAnimFrameId = null;
-    }
-}
-
-function mobileTitleScreenAnimLoop() {
-    if (getGameState() !== STATE_TITLE) return;
-    let now = performance.now();
-    let dt = (now - lastTitleAnimTime) * 0.25;
-    lastTitleAnimTime = now;
-    updateMobileTitleBgBlocks(dt);
-    drawTitleScreen();
-    showMobileTitleButtons();
-    mobileTitleAnimFrameId = requestAnimationFrame(mobileTitleScreenAnimLoop);
-}
-
-// --- Mobile Game Over Tap Handler ---
-import { STATE_GAMEOVER, STATE_TITLE } from './game.js';
-import { drawMobileGameOver } from './draw-mobile.js';
-
+// --- Animation Loop & State ---
 function mobileAnimationLoop() {
     const state = getGameState();
-    console.log('[Mobile] Animation loop state:', state);
     if (state === STATE_TITLE) {
         stopMobileTitleScreen();
         startMobileTitleScreen();
@@ -98,17 +78,9 @@ function mobileAnimationLoop() {
     } else {
         stopMobileTitleScreen();
         hideMobileTitleButtons();
-        showMobileControls();
+        showMobileControls(simulateKey);
         if (state === STATE_PLAY) {
-            drawGame(
-                getBoard(),
-                getCurrent(),
-                getCurrentX(),
-                getCurrentY(),
-                getNext(),
-                getScore(),
-                getFlashRowsActive()
-            );
+            drawGame(getBoard(), getCurrent(), getCurrentX(), getCurrentY(), getNext(), getScore(), getFlashRowsActive());
         } else if (state === STATE_HIGHSCORES) {
             drawHighscores();
         } else if (state === STATE_NAME_ENTRY) {
@@ -120,9 +92,9 @@ function mobileAnimationLoop() {
     }
     requestAnimationFrame(mobileAnimationLoop);
 }
-
 window.mobileAnimationLoop = mobileAnimationLoop;
 
+// --- Game Over Tap Handler ---
 if (typeof window._mobileGameOverTapHandlerAttached === 'undefined') {
     window._mobileGameOverTapHandlerAttached = true;
     document.addEventListener('touchend', function gameOverTapHandler() {
@@ -132,28 +104,11 @@ if (typeof window._mobileGameOverTapHandlerAttached === 'undefined') {
     });
 }
 
-function simulateKey(key) {
-    document.dispatchEvent(new KeyboardEvent('keydown', { key }));
+// --- Utility: Debounce ---
+function debounce(fn, ms) {
+    let timer;
+    return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), ms);
+    };
 }
-
-function showMobileControls() {
-    if (!document.getElementById('mobile-controls')) addMobileButtons();
-    const controls = document.getElementById('mobile-controls');
-    if (controls.style.display === 'none' || controls.style.display === '') {
-        controls.style.display = 'block';
-        setTimeout(() => {
-            controls.classList.add('fade-in');
-        }, 10);
-    }
-}
-
-function hideMobileControls() {
-    const controls = document.getElementById('mobile-controls');
-    if (controls.style.display !== 'none') {
-        controls.classList.remove('fade-in');
-        controls.style.display = 'none';
-    }
-}
-
-// Initial call to kick things off
-mobileAnimationLoop();
