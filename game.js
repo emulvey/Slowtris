@@ -292,8 +292,10 @@ function checkLineClear() {
         render();
         if (flashTimeoutId) clearTimeout(flashTimeoutId);
         flashTimeoutId = setTimeout(() => {
+            // Sort lines in descending order to avoid index shift issues
+            lines.sort((a, b) => b - a);
             for (let i = 0; i < lines.length; i++) {
-                board.splice(lines[i] - i, 1);
+                board.splice(lines[i], 1);
                 board.unshift(Array(COLS).fill(0));
             }
             flashRowsActive = null;
