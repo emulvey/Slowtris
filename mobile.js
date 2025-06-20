@@ -1,7 +1,7 @@
 // Mobile-specific game setup for Slowtris
 // This will be expanded with touch controls and responsive layout
 import { setupGame, getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY } from './game.js';
-import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext } from './draw-mobile.js';
+import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons } from './draw-mobile.js';
 
 export function setupMobileGame() {
     if (document.readyState === 'loading') {
@@ -63,7 +63,7 @@ function setupTouchControls() {
 function animationLoop() {
     const state = getGameState();
     if (state === STATE_TITLE) {
-        drawTitleScreen(true); // mobile: suppress enter/h text
+        drawTitleScreen();
         showMobileTitleButtons();
     } else {
         hideMobileTitleButtons();
@@ -84,36 +84,6 @@ function animationLoop() {
         }
     }
     requestAnimationFrame(animationLoop);
-}
-
-function showMobileTitleButtons() {
-    if (document.getElementById('mobile-title-buttons')) return;
-    const container = document.createElement('div');
-    container.id = 'mobile-title-buttons';
-    container.style.position = 'fixed';
-    container.style.left = '0';
-    container.style.right = '0';
-    container.style.bottom = '80px';
-    container.style.zIndex = '200';
-    container.style.display = 'flex';
-    container.style.justifyContent = 'center';
-    container.style.gap = '32px';
-    container.innerHTML = `
-        <button id="mobile-start-btn" style="font-size:1.5rem;padding:18px 32px;border-radius:16px;background:#28a745;color:#fff;border:none;box-shadow:0 2px 8px #0006;">Start</button>
-        <button id="mobile-highscore-btn" style="font-size:1.5rem;padding:18px 32px;border-radius:16px;background:#007bff;color:#fff;border:none;box-shadow:0 2px 8px #0006;">Highscores</button>
-    `;
-    document.body.appendChild(container);
-    document.getElementById('mobile-start-btn').onclick = () => {
-        simulateKey('Enter');
-    };
-    document.getElementById('mobile-highscore-btn').onclick = () => {
-        simulateKey('h');
-    };
-}
-
-function hideMobileTitleButtons() {
-    const el = document.getElementById('mobile-title-buttons');
-    if (el) el.remove();
 }
 
 function simulateKey(key) {

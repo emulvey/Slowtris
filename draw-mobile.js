@@ -32,6 +32,15 @@ function resizeCanvasForMobile() {
 export function drawTitleScreen() {
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Animate falling blocks in the background (reuse desktop logic)
+    if (!window.mobileTitleBgBlocks) {
+        window.mobileTitleBgBlocks = [];
+        for (let i = 0; i < 18; i++) {
+            window.mobileTitleBgBlocks.push(genMobileTitleBgBlock());
+        }
+    }
+    updateMobileTitleBgBlocks(1);
+    drawMobileTitleBgBlocks();
     ctx.save();
     ctx.globalAlpha = 0.5;
     ctx.fillStyle = '#111';
@@ -46,6 +55,65 @@ export function drawTitleScreen() {
     ctx.textAlign = 'center';
     ctx.fillText('Slowtris', canvas.width / 2, boardY + 80);
     // No desktop instructions here
+    if (!titleAnimFrameId) {
+        titleAnimFrameId = requestAnimationFrame(titleScreenAnimLoop);
+    }
+}
+
+function titleScreenAnimLoop() {
+    titleAnimFrameId = null;
+    drawTitleScreen();
+}
+
+function genMobileTitleBgBlock() {
+    const color = TETROMINOES[Math.floor(Math.random() * TETROMINOES.length)].color;
+    return {
+        x: Math.floor(Math.random() * 10),
+        y: Math.random() * -20,
+        speed: 0.04 + Math.random() * 0.08,
+        color,
+        flashing: false,
+        flashTime: 0
+    };
+}
+
+function updateMobileTitleBgBlocks(dt) {
+    for (let block of window.mobileTitleBgBlocks) {
+        if (!block.flashing) {
+            block.y += block.speed * dt;
+            if (block.y >= 19) {
+                block.y = 19;
+                block.flashing = true;
+                block.flashTime = 0;
+            }
+        } else {
+            block.flashTime += dt;
+            if (block.flashTime > 180) {
+                Object.assign(block, genMobileTitleBgBlock());
+            }
+        }
+    }
+}
+
+function drawMobileTitleBgBlocks() {
+    for (let block of window.mobileTitleBgBlocks) {
+        const boardRect = getBoardRect();
+        const cellW = boardRect.boardW / 10;
+        const cellH = boardRect.boardH / 20;
+        let px = boardRect.boardX + block.x * cellW;
+        let py = boardRect.boardY + block.y * cellH;
+        ctx.save();
+        if (block.flashing) {
+            ctx.globalAlpha = 0.7 + 0.3 * Math.sin(block.flashTime / 30);
+            ctx.fillStyle = '#fff';
+        } else {
+            ctx.globalAlpha = 0.7;
+            ctx.fillStyle = block.color;
+        }
+        ctx.fillRect(px, py, cellW, cellH);
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+    }
 }
 
 function getBoardRect() {
@@ -192,4 +260,44 @@ export function drawNameEntry(playerName) {
     ctx.fillText('Type letters/numbers.', canvas.width / 2, 280);
     ctx.fillText('[Backspace] to erase.', canvas.width / 2, 300);
     ctx.fillText('Tap to confirm.', canvas.width / 2, 320);
+}
+
+export function showMobileTitleButtons() {
+    hideMobileTitleButtons();
+    if (document.getElementById('mobile-title-buttons')) return;
+    const container = document.createElement('div');
+    container.id = 'mobile-title-buttons';
+    container.style.position = 'fixed';
+    container.style.left = '0';
+    container.style.right = '0';
+    container.style.top = '0';
+    container.style.bottom = '0';
+    container.style.zIndex = '200';
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
+    container.style.pointerEvents = 'none';
+    container.innerHTML = `
+        <button id="mobile-start-btn" style="font-size:1.5rem;margin-bottom:24px;padding:18px 32px;border-radius:16px;background:#28a745;color:#fff;border:none;box-shadow:0 2px 8px #0006;pointer-events:auto;">Start</button>
+        <button id="mobile-highscore-btn" style="font-size:1.5rem;padding:18px 32px;border-radius:16px;background:#007bff;color:#fff;border:none;box-shadow:0 2px 8px #0006;pointer-events:auto;">Highscores</button>
+    `;
+    document.body.appendChild(container);
+    document.getElementById('mobile-start-btn').onclick = (e) => {
+        e.stopPropagation();
+        simulateKey('Enter');
+    };
+    document.getElementById('mobile-highscore-btn').onclick = (e) => {
+        e.stopPropagation();
+        simulateKey('h');
+    };
+}
+
+export function hideMobileTitleButtons() {
+    const el = document.getElementById('mobile-title-buttons');
+    if (el) el.remove();
+}
+
+function simulateKey(key) {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key }));
 }
