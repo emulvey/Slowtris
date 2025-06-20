@@ -54,7 +54,7 @@ export function drawTitleScreen() {
     ctx.font = 'bold 32px "Press Start 2P", Consolas, monospace';
     ctx.textAlign = 'center';
     ctx.fillText('Slowtris', canvas.width / 2, boardY + 80);
-    // No desktop instructions here
+    // Only mobile-specific UI here, no desktop instructions
     if (!titleAnimFrameId) {
         titleAnimFrameId = requestAnimationFrame(titleScreenAnimLoop);
     }
