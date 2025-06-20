@@ -55,9 +55,6 @@ function setupTouchControls() {
             else if (dy < -30) simulateKey(' '); // swipe up = hard drop
         }
     });
-
-    // On-screen buttons for fallback
-    addMobileButtons();
 }
 
 function mobileAnimationLoop() {
@@ -130,10 +127,38 @@ function addMobileButtons() {
 }
 
 function showMobileControls() {
+    if (!document.getElementById('mobile-controls')) addMobileButtons();
     const controls = document.getElementById('mobile-controls');
     if (controls) controls.style.display = 'flex';
 }
 function hideMobileControls() {
     const controls = document.getElementById('mobile-controls');
     if (controls) controls.style.display = 'none';
+}
+
+// Check if the device is mobile
+function isMobile() {
+    return /Mobi|Android/i.test(navigator.userAgent);
+}
+
+if (isMobile()) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('gameCanvas');
+            if (canvas && canvas.getContext) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            import('./main-mobile.js');
+        });
+    } else {
+        const canvas = document.getElementById('gameCanvas');
+        if (canvas && canvas.getContext) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        import('./main-mobile.js');
+    }
+} else {
+    import('./main-desktop.js');
 }
