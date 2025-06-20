@@ -5,12 +5,14 @@ import {
     getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName,
     STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY, STATE_GAMEOVER, handleKeydown
 } from './game.js';
-import {
-    drawGame, drawHighscores, drawNameEntry, drawMobileGameOver,
-    enableMobileCanvasResize, setContext, hideMobileTitleButtons
-} from './draw-mobile.js';
 import { showMobileControls, hideMobileControls } from './mobile-controls.js';
 import { startMobileTitleScreen, stopMobileTitleScreen } from './mobile-title.js';
+import {
+    drawMobileGame, drawMobileHighscores, drawMobileNameEntry, drawMobileGameOver, setMobileContext
+} from './mobile-draw.js';
+import {
+    getMobileGameState, getMobilePlayerName, getMobileScore
+} from './mobile-state.js';
 
 // --- Constants ---
 const GAME_CANVAS_ID = 'gameCanvas';
@@ -31,7 +33,7 @@ function setupMobileGame() {
         console.error(`[Mobile] No #${GAME_CANVAS_ID} found.`);
         return;
     }
-    setContext(canvas.getContext('2d'), canvas);
+    setMobileContext(canvas.getContext('2d'), canvas);
     document.addEventListener('keydown', handleKeydown);
     window.mobileTitleBgBlocks = undefined;
     if (typeof window._mobileGameState === 'undefined') window._mobileGameState = STATE_TITLE;
@@ -69,7 +71,7 @@ function simulateKey(key) {
 
 // --- Animation Loop & State ---
 function mobileAnimationLoop() {
-    const state = getGameState();
+    const state = getMobileGameState();
     if (state === STATE_TITLE) {
         stopMobileTitleScreen();
         startMobileTitleScreen();
@@ -77,16 +79,16 @@ function mobileAnimationLoop() {
         return;
     } else {
         stopMobileTitleScreen();
-        hideMobileTitleButtons();
+        // hideMobileTitleButtons();
         showMobileControls(simulateKey);
         if (state === STATE_PLAY) {
-            drawGame(getBoard(), getCurrent(), getCurrentX(), getCurrentY(), getNext(), getScore(), getFlashRowsActive());
+            drawMobileGame();
         } else if (state === STATE_HIGHSCORES) {
-            drawHighscores();
+            drawMobileHighscores();
         } else if (state === STATE_NAME_ENTRY) {
-            drawNameEntry(getPlayerName());
+            drawMobileNameEntry(getMobilePlayerName());
         } else if (state === STATE_GAMEOVER) {
-            drawMobileGameOver(getScore());
+            drawMobileGameOver(getMobileScore());
             hideMobileControls();
         }
     }

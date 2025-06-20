@@ -518,5 +518,22 @@ function placeMobileTetromino() {
     // Game over detection for mobile
     if (!isValidPosition(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY, undefined, window._mobileBoard)) {
         window._mobileGameState = STATE_GAMEOVER;
+        return;
+    }
+    // Line clear logic for mobile
+    let lines = [];
+    for (let y = 0; y < window._mobileBoard.length; y++) {
+        if (window._mobileBoard[y].every(cell => cell)) {
+            lines.push(y);
+        }
+    }
+    if (lines.length > 0) {
+        // Remove filled lines and add empty ones at the top
+        lines.sort((a, b) => b - a);
+        for (let i = 0; i < lines.length; i++) {
+            window._mobileBoard.splice(lines[i], 1);
+            window._mobileBoard.unshift(Array(window._mobileBoard[0].length).fill(0));
+        }
+        // Optionally, update score here
     }
 }
