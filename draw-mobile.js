@@ -115,8 +115,8 @@ function drawMobileTitleBgBlocks() {
 }
 
 function getBoardRect() {
-    // Fit board to 90% width, keep 10:20 aspect
-    const boardW = Math.floor(canvas.width * 0.9);
+    // Fit board to 70% width, keep 10:20 aspect, leaving room for side UI
+    const boardW = Math.floor(canvas.width * 0.7); // was 0.9
     const boardH = Math.floor(boardW * 2);
     const boardX = Math.floor((canvas.width - boardW) / 2);
     const boardY = Math.floor((canvas.height - boardH) / 2);
