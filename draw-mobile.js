@@ -39,7 +39,6 @@ export function drawMobileTitleScreen() {
             window.mobileTitleBgBlocks.push(genMobileTitleBgBlock());
         }
     }
-    updateMobileTitleBgBlocks(1);
     drawMobileTitleBgBlocks();
     ctx.save();
     ctx.globalAlpha = 0.5;
@@ -55,14 +54,6 @@ export function drawMobileTitleScreen() {
     ctx.textAlign = 'center';
     ctx.fillText('Slowtris', canvas.width / 2, boardY + 80);
     // Only mobile-specific UI here, no desktop instructions
-    if (!titleAnimFrameId) {
-        titleAnimFrameId = requestAnimationFrame(mobileTitleScreenAnimLoop);
-    }
-}
-
-function mobileTitleScreenAnimLoop() {
-    titleAnimFrameId = null;
-    drawMobileTitleScreen();
 }
 
 function genMobileTitleBgBlock() {
