@@ -77,7 +77,7 @@ function genMobileTitleBgBlock() {
     };
 }
 
-function updateMobileTitleBgBlocks(dt) {
+export function updateMobileTitleBgBlocks(dt) {
     for (let block of window.mobileTitleBgBlocks) {
         if (!block.flashing) {
             block.y += block.speed * dt;

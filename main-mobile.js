@@ -1,5 +1,5 @@
 import { getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY } from './game.js';
-import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons } from './draw-mobile.js';
+import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons, updateMobileTitleBgBlocks } from './draw-mobile.js';
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -70,9 +70,7 @@ function mobileTitleScreenAnimLoop() {
     let now = performance.now();
     let dt = (now - lastTitleAnimTime) * 0.25;
     lastTitleAnimTime = now;
-    if (typeof window.updateMobileTitleBgBlocks === 'function') {
-        window.updateMobileTitleBgBlocks(dt);
-    }
+    updateMobileTitleBgBlocks(dt);
     drawTitleScreen();
     showMobileTitleButtons();
     mobileTitleAnimFrameId = requestAnimationFrame(mobileTitleScreenAnimLoop);
