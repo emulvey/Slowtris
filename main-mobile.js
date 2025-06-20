@@ -36,7 +36,9 @@ function setupMobileGame() {
     setMobileContext(canvas.getContext('2d'), canvas);
     document.addEventListener('keydown', handleKeydown);
     window.mobileTitleBgBlocks = undefined;
-    if (typeof window._mobileGameState === 'undefined') window._mobileGameState = STATE_TITLE;
+    // Ensure both the backing variable and the property are set to STATE_TITLE at startup
+    window.__mobileGameState = STATE_TITLE;
+    window._mobileGameState = STATE_TITLE;
     setupTouchControls(canvas);
     mobileAnimationLoop();
 }
