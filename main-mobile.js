@@ -37,11 +37,6 @@ function setupMobileGame() {
     document.addEventListener('keydown', handleKeydown);
     window.mobileTitleBgBlocks = undefined;
     if (typeof window._mobileGameState === 'undefined') window._mobileGameState = STATE_TITLE;
-    if (!window._mobileBoard || window._mobileBoard.length !== 20) {
-        if (typeof window.initMobileBoard === 'function') {
-            window.initMobileBoard();
-        }
-    }
     setupTouchControls(canvas);
     mobileAnimationLoop();
 }
@@ -110,6 +105,21 @@ if (typeof window._mobileGameOverTapHandlerAttached === 'undefined') {
         }
     });
 }
+
+// --- Listen for state change to STATE_PLAY to initialize the board ---
+const _origSetMobileGameState = Object.getOwnPropertyDescriptor(window, '_mobileGameState')?.set;
+Object.defineProperty(window, '_mobileGameState', {
+    configurable: true,
+    enumerable: true,
+    get() { return window.__mobileGameState; },
+    set(val) {
+        window.__mobileGameState = val;
+        if (val === STATE_PLAY && typeof window.initMobileBoard === 'function') {
+            window.initMobileBoard();
+        }
+        if (typeof _origSetMobileGameState === 'function') _origSetMobileGameState(val);
+    }
+});
 
 // --- Utility: Debounce ---
 function debounce(fn, ms) {
