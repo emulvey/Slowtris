@@ -1,7 +1,7 @@
 // Mobile-specific game setup for Slowtris
 // This will be expanded with touch controls and responsive layout
 import { setupGame, getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY } from './game.js';
-import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry } from './draw.js';
+import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize } from './draw.js';
 
 export function setupMobileGame() {
     if (document.readyState === 'loading') {
@@ -15,6 +15,7 @@ export function setupMobileGame() {
 
 function _setupMobileGame() {
     console.log('[Mobile] DOM ready, setting up game');
+    enableMobileCanvasResize();
     setupGame();
     setupTouchControls();
     animationLoop();
@@ -56,6 +57,62 @@ function setupTouchControls() {
     addMobileButtons();
 }
 
+function animationLoop() {
+    const state = getGameState();
+    if (state === STATE_TITLE) {
+        drawTitleScreen(true); // mobile: suppress enter/h text
+        showMobileTitleButtons();
+    } else {
+        hideMobileTitleButtons();
+        if (state === STATE_PLAY) {
+            drawGame(
+                getBoard(),
+                getCurrent(),
+                getCurrentX(),
+                getCurrentY(),
+                getNext(),
+                getScore(),
+                getFlashRowsActive()
+            );
+        } else if (state === STATE_HIGHSCORES) {
+            drawHighscores();
+        } else if (state === STATE_NAME_ENTRY) {
+            drawNameEntry(getPlayerName());
+        }
+    }
+    requestAnimationFrame(animationLoop);
+}
+
+function showMobileTitleButtons() {
+    if (document.getElementById('mobile-title-buttons')) return;
+    const container = document.createElement('div');
+    container.id = 'mobile-title-buttons';
+    container.style.position = 'fixed';
+    container.style.left = '0';
+    container.style.right = '0';
+    container.style.bottom = '80px';
+    container.style.zIndex = '200';
+    container.style.display = 'flex';
+    container.style.justifyContent = 'center';
+    container.style.gap = '32px';
+    container.innerHTML = `
+        <button id="mobile-start-btn" style="font-size:1.5rem;padding:18px 32px;border-radius:16px;background:#28a745;color:#fff;border:none;box-shadow:0 2px 8px #0006;">Start</button>
+        <button id="mobile-highscore-btn" style="font-size:1.5rem;padding:18px 32px;border-radius:16px;background:#007bff;color:#fff;border:none;box-shadow:0 2px 8px #0006;">Highscores</button>
+    `;
+    document.body.appendChild(container);
+    document.getElementById('mobile-start-btn').onclick = () => {
+        simulateKey('Enter');
+    };
+    document.getElementById('mobile-highscore-btn').onclick = () => {
+        simulateKey('h');
+    };
+}
+
+function hideMobileTitleButtons() {
+    const el = document.getElementById('mobile-title-buttons');
+    if (el) el.remove();
+}
+
 function simulateKey(key) {
     document.dispatchEvent(new KeyboardEvent('keydown', { key }));
 }
@@ -94,26 +151,4 @@ function addMobileButtons() {
         });
     });
     document.body.appendChild(controls);
-}
-
-function animationLoop() {
-    const state = getGameState();
-    if (state === STATE_TITLE) {
-        drawTitleScreen();
-    } else if (state === STATE_PLAY) {
-        drawGame(
-            getBoard(),
-            getCurrent(),
-            getCurrentX(),
-            getCurrentY(),
-            getNext(),
-            getScore(),
-            getFlashRowsActive()
-        );
-    } else if (state === STATE_HIGHSCORES) {
-        drawHighscores();
-    } else if (state === STATE_NAME_ENTRY) {
-        drawNameEntry(getPlayerName());
-    }
-    requestAnimationFrame(animationLoop);
 }

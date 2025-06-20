@@ -152,7 +152,7 @@ export function drawTitleBgBlocks() {
     }
 }
 
-export function drawTitleScreen() {
+export function drawTitleScreen(isMobile = false) {
     if (!ctx || !canvas) { console.log('drawTitleScreen: ctx or canvas not set'); return; }
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
@@ -166,8 +166,12 @@ export function drawTitleScreen() {
     ctx.textAlign = 'center';
     ctx.fillText('Slowtris', canvas.width / 2, 140);
     ctx.font = '16px "Press Start 2P", Consolas, monospace';
-    ctx.fillText('Press [Enter] to Start', canvas.width / 2, 220);
-    ctx.fillText('Press [H] for Highscores', canvas.width / 2, 260);
+    if (isMobile) {
+        // Draw nothing here, buttons will be overlaid in mobile.js
+    } else {
+        ctx.fillText('Press [Enter] to Start', canvas.width / 2, 220);
+        ctx.fillText('Press [H] for Highscores', canvas.width / 2, 260);
+    }
     // Debug output
     // console.log('drawTitleScreen called');
 }
@@ -304,4 +308,30 @@ export function drawNameEntry(playerName) {
     ctx.fillText('Type letters/numbers.', canvas.width / 2, 280);
     ctx.fillText('[Backspace] to erase.', canvas.width / 2, 300);
     ctx.fillText('[Enter] to confirm.', canvas.width / 2, 320);
+}
+
+function resizeCanvasForMobile() {
+    const canvas = document.getElementById('gameCanvas');
+    if (!canvas) return;
+    // Set width to 98vw, height to maintain aspect ratio (10:13.33)
+    const margin = 0.98;
+    let w = window.innerWidth * margin;
+    let h = w * (640 / 480); // original aspect ratio
+    if (h > window.innerHeight * margin) {
+        h = window.innerHeight * margin;
+        w = h * (480 / 640);
+    }
+    canvas.width = Math.round(w);
+    canvas.height = Math.round(h);
+    // Optionally, set style to fill parent
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('resize', resizeCanvasForMobile);
+}
+
+export function enableMobileCanvasResize() {
+    resizeCanvasForMobile();
 }
