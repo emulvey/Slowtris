@@ -4,6 +4,17 @@ import { setupGame, getGameState, getBoard, getCurrent, getCurrentX, getCurrentY
 import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry } from './draw.js';
 
 export function setupMobileGame() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            _setupMobileGame();
+        });
+    } else {
+        _setupMobileGame();
+    }
+}
+
+function _setupMobileGame() {
+    console.log('[Mobile] DOM ready, setting up game');
     setupGame();
     setupTouchControls();
     animationLoop();

@@ -6,14 +6,31 @@ function isMobile() {
 }
 
 if (isMobile()) {
-    import('./mobile.js').then(mod => {
-        mod.setupMobileGame();
-    });
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            import('./mobile.js').then(mod => {
+                console.log('[Main] Mobile detected, running mobile entry');
+                mod.setupMobileGame();
+            });
+        });
+    } else {
+        import('./mobile.js').then(mod => {
+            console.log('[Main] Mobile detected, running mobile entry');
+            mod.setupMobileGame();
+        });
+    }
 } else {
-    document.addEventListener('DOMContentLoaded', () => {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[Main] Desktop detected, DOM ready, running setupGame');
+            setupGame();
+            animationLoop();
+        });
+    } else {
+        console.log('[Main] Desktop detected, DOM already ready, running setupGame');
         setupGame();
         animationLoop();
-    });
+    }
 }
 
 function animationLoop() {

@@ -3,7 +3,15 @@ import { TETROMINOES } from './tetromino.js';
 import { getHighscores } from './storage.js';
 
 export let ctx, canvas;
-export function setContext(c, cv) { ctx = c; canvas = cv; console.log('setContext called', ctx, canvas); }
+export function setContext(c, cv) {
+    ctx = c;
+    canvas = cv;
+    if (!ctx || !canvas) {
+        console.error('[Draw] setContext failed: ctx or canvas is null', ctx, canvas);
+    } else {
+        console.log('[Draw] setContext called', ctx, canvas);
+    }
+}
 
 export function drawBlock(x, y, color) {
     ctx.save();
