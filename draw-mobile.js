@@ -69,6 +69,13 @@ function genMobileTitleBgBlock() {
 }
 
 export function updateMobileTitleBgBlocks(dt) {
+    // Ensure the background blocks array is initialized
+    if (!Array.isArray(window.mobileTitleBgBlocks)) {
+        window.mobileTitleBgBlocks = [];
+        for (let i = 0; i < 18; i++) {
+            window.mobileTitleBgBlocks.push(genMobileTitleBgBlock());
+        }
+    }
     for (let block of window.mobileTitleBgBlocks) {
         if (!block.flashing) {
             block.y += block.speed * dt;
@@ -199,6 +206,7 @@ function drawScore(score, boardRect) {
 }
 
 export function drawGame(board, current, currentX, currentY, next, score, flashRowsActive) {
+    console.log('[Mobile] drawGame called', { board, current, currentX, currentY, next, score, flashRowsActive });
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const boardRect = getBoardRect();
@@ -281,12 +289,13 @@ export function showMobileTitleButtons() {
     document.getElementById('mobile-start-btn').onclick = (e) => {
         e.stopPropagation();
         console.log('[Mobile] Start button tapped');
-        simulateKey('Enter');
+        // Directly call handleKeydown for mobile reliability
+        import('./game.js').then(mod => mod.handleKeydown({ key: 'Enter' }));
     };
     document.getElementById('mobile-highscore-btn').onclick = (e) => {
         e.stopPropagation();
         console.log('[Mobile] Highscore button tapped');
-        simulateKey('h');
+        import('./game.js').then(mod => mod.handleKeydown({ key: 'h' }));
     };
 }
 

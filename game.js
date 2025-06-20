@@ -24,14 +24,18 @@ const FLASH_EFFECT_DURATION = 120;
 let playerName = '';
 
 // --- State accessors for animation loop ---
-export function getGameState() { return gameState; }
-export function getBoard() { return board; }
-export function getCurrent() { return current; }
-export function getCurrentX() { return currentX; }
-export function getCurrentY() { return currentY; }
-export function getNext() { return next; }
-export function getScore() { return score; }
-export function getFlashRowsActive() { return flashRowsActive; }
+export function getGameState() {
+    // Use mobile override if present
+    if (typeof window !== 'undefined' && typeof window._mobileGameState !== 'undefined') {
+        console.log('[Mobile] getGameState returning', window._mobileGameState);
+        return window._mobileGameState;
+    }
+    console.log('[Desktop] getGameState returning', gameState);
+    return gameState;
+}
+
+// REMOVE the original (non-mobile) accessors for getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive here
+
 export function getPlayerName() { return playerName; }
 
 export function setupGame() {
@@ -119,18 +123,172 @@ function spawnTetromino() {
     moveCount = 0;
 }
 
+// --- Mobile play state ---
+function initMobilePlayState() {
+    // Board, tetromino, and score for mobile mode
+    window._mobileBoard = Array.from({length: 20}, () => Array(10).fill(0));
+    window._mobileBag = [];
+    window._mobileNext = nextTetromino();
+    window._mobileScore = 0;
+    window._mobileCurrent = window._mobileNext;
+    window._mobileNext = nextTetromino();
+    window._mobileCurrentX = 3;
+    window._mobileCurrentY = 0;
+    window._mobileMoveCount = 0;
+    window._mobileLockMoves = 0;
+    window._mobileLockDelay = 2;
+    window._mobileFlashRowsActive = null;
+}
+
+// Patch mobile state accessors
+export function getBoard() {
+    if (typeof window !== 'undefined' && window._mobileGameState === STATE_PLAY) return window._mobileBoard;
+    return board;
+}
+export function getCurrent() {
+    if (typeof window !== 'undefined' && window._mobileGameState === STATE_PLAY) return window._mobileCurrent;
+    return current;
+}
+export function getCurrentX() {
+    if (typeof window !== 'undefined' && window._mobileGameState === STATE_PLAY) return window._mobileCurrentX;
+    return currentX;
+}
+export function getCurrentY() {
+    if (typeof window !== 'undefined' && window._mobileGameState === STATE_PLAY) return window._mobileCurrentY;
+    return currentY;
+}
+export function getNext() {
+    if (typeof window !== 'undefined' && window._mobileGameState === STATE_PLAY) return window._mobileNext;
+    return next;
+}
+export function getScore() {
+    if (typeof window !== 'undefined' && window._mobileGameState === STATE_PLAY) return window._mobileScore;
+    return score;
+}
+export function getFlashRowsActive() {
+    if (typeof window !== 'undefined' && window._mobileGameState === STATE_PLAY) return window._mobileFlashRowsActive;
+    return flashRowsActive;
+}
+
+function setMobileGameState(newState) {
+    window._mobileGameState = newState;
+    if (newState === STATE_PLAY) {
+        initMobilePlayState();
+    }
+}
+
 function render() {
     if (gameState === STATE_PLAY) {
         drawGame(board, current, currentX, currentY, next, score, flashRowsActive);
     }
 }
 
-function handleKeydown(e) {
-    if (gameState === STATE_TITLE) {
+export function handleKeydown(e) {
+    console.log('[Mobile] handleKeydown called:', e.key);
+    // Mobile: use window._mobileGameState if present
+    const isMobile = typeof window !== 'undefined' && typeof window._mobileGameState !== 'undefined';
+    let state = isMobile ? window._mobileGameState : gameState;
+    if (state === STATE_TITLE) {
         if (e.key === 'Enter') {
-            setGameState(STATE_PLAY);
+            if (isMobile) {
+                setMobileGameState(STATE_PLAY);
+                console.log('[Mobile] setMobileGameState(STATE_PLAY) called, new state:', window._mobileGameState);
+                // Force animation loop to re-check state
+                if (typeof window.mobileAnimationLoop === 'function') {
+                    window.mobileAnimationLoop();
+                }
+            } else {
+                setGameState(STATE_PLAY);
+            }
         } else if (e.key.toLowerCase() === 'h') {
-            setGameState(STATE_HIGHSCORES);
+            if (isMobile) {
+                setMobileGameState(STATE_HIGHSCORES);
+                console.log('[Mobile] setMobileGameState(STATE_HIGHSCORES) called, new state:', window._mobileGameState);
+                if (typeof window.mobileAnimationLoop === 'function') {
+                    window.mobileAnimationLoop();
+                }
+            } else {
+                setGameState(STATE_HIGHSCORES);
+            }
+        }
+        return;
+    }
+    if (isMobile && state === STATE_PLAY) {
+        // Mobile play logic
+        let moved = false;
+        let wasTouching = isTouchingBottom(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY, window._mobileBoard);
+        let manualDown = false;
+        if (e.key === 'ArrowLeft') {
+            if (isValidPosition(window._mobileCurrent, window._mobileCurrentX - 1, window._mobileCurrentY, undefined, window._mobileBoard)) {
+                window._mobileCurrentX--;
+                moved = true;
+            }
+        } else if (e.key === 'ArrowRight') {
+            if (isValidPosition(window._mobileCurrent, window._mobileCurrentX + 1, window._mobileCurrentY, undefined, window._mobileBoard)) {
+                window._mobileCurrentX++;
+                moved = true;
+            }
+        } else if (e.key === 'ArrowDown') {
+            if (isValidPosition(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY + 1, undefined, window._mobileBoard)) {
+                window._mobileCurrentY++;
+                moved = true;
+                manualDown = true;
+            } else {
+                placeMobileTetromino();
+                return;
+            }
+        } else if (e.key === 'z' || e.key === 'Z') {
+            let rotated = rotate(rotate(rotate(window._mobileCurrent.shape)));
+            if (isValidPosition({ type: window._mobileCurrent.type, shape: rotated }, window._mobileCurrentX, window._mobileCurrentY, undefined, window._mobileBoard)) {
+                window._mobileCurrent.shape = rotated;
+                moved = true;
+            }
+        } else if (e.key === 'x' || e.key === 'X' || e.key === 'ArrowUp') {
+            let rotated = rotate(window._mobileCurrent.shape);
+            if (isValidPosition({ type: window._mobileCurrent.type, shape: rotated }, window._mobileCurrentX, window._mobileCurrentY, undefined, window._mobileBoard)) {
+                window._mobileCurrent.shape = rotated;
+                moved = true;
+            }
+        } else if (e.key === ' ' || e.key === 'Enter') {
+            while (isValidPosition(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY + 1, undefined, window._mobileBoard)) {
+                window._mobileCurrentY++;
+            }
+            placeMobileTetromino();
+            return;
+        }
+        // --- TURN-BASED DROP LOGIC ---
+        if (moved) {
+            if (manualDown) {
+                window._mobileMoveCount = 0;
+            } else {
+                window._mobileMoveCount++;
+                if (window._mobileMoveCount >= 2) {
+                    if (isValidPosition(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY + 1, undefined, window._mobileBoard)) {
+                        window._mobileCurrentY++;
+                    }
+                    window._mobileMoveCount = 0;
+                }
+            }
+            // Lock delay logic
+            if (isTouchingBottom(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY, window._mobileBoard)) {
+                if (!wasTouching) {
+                    window._mobileLockMoves = 0;
+                } else {
+                    window._mobileLockMoves++;
+                }
+                if (window._mobileLockMoves >= window._mobileLockDelay) {
+                    placeMobileTetromino();
+                    return;
+                }
+            } else {
+                if (wasTouching && isValidPosition(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY + 1, undefined, window._mobileBoard)) {
+                    window._mobileCurrentY++;
+                    if (isTouchingBottom(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY, window._mobileBoard)) {
+                        window._mobileLockMoves = 0;
+                    }
+                }
+                window._mobileLockMoves = 0;
+            }
         }
         return;
     }
@@ -244,8 +402,9 @@ function handleKeydown(e) {
     // ...existing code...
 }
 
-function isValidPosition(tet, x, y, shapeOverride) {
+function isValidPosition(tet, x, y, shapeOverride, boardOverride) {
     const shape = shapeOverride || tet.shape;
+    const boardToUse = boardOverride || board;
     for (let row = 0; row < shape.length; row++) {
         for (let col = 0; col < shape[row].length; col++) {
             if (shape[row][col]) {
@@ -254,7 +413,7 @@ function isValidPosition(tet, x, y, shapeOverride) {
                 if (
                     boardX < 0 || boardX >= COLS ||
                     boardY < 0 || boardY >= ROWS ||
-                    board[boardY][boardX]
+                    boardToUse[boardY][boardX]
                 ) {
                     return false;
                 }
@@ -264,8 +423,8 @@ function isValidPosition(tet, x, y, shapeOverride) {
     return true;
 }
 
-function isTouchingBottom(tet, x, y) {
-    return !isValidPosition(tet, x, y + 1);
+function isTouchingBottom(tet, x, y, boardOverride) {
+    return !isValidPosition(tet, x, y + 1, undefined, boardOverride);
 }
 
 function placeTetromino() {
@@ -339,4 +498,21 @@ function drawGameOver() {
     ctx.font = '24px Segoe UI';
     ctx.fillText('Press [Enter] for Title', canvas.width / 2, canvas.height / 2 + 30);
     ctx.restore();
+}
+
+// --- Mobile helpers ---
+function placeMobileTetromino() {
+    for (let y = 0; y < window._mobileCurrent.shape.length; y++) {
+        for (let x = 0; x < window._mobileCurrent.shape[y].length; x++) {
+            if (window._mobileCurrent.shape[y][x]) {
+                window._mobileBoard[window._mobileCurrentY + y][window._mobileCurrentX + x] = window._mobileCurrent.type + 1;
+            }
+        }
+    }
+    // No line clear or game over logic yet (add as needed)
+    // Spawn next tetromino
+    window._mobileCurrent = window._mobileNext;
+    window._mobileNext = nextTetromino();
+    window._mobileCurrentX = 3;
+    window._mobileCurrentY = 0;
 }

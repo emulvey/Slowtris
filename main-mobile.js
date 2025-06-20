@@ -1,4 +1,8 @@
-import { getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY } from './game.js';
+// Animation frame ID for mobile title screen (must be declared before any function uses it)
+let mobileTitleAnimFrameId = null;
+let lastTitleAnimTime = 0;
+
+import { getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY, handleKeydown } from './game.js';
 import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons, updateMobileTitleBgBlocks } from './draw-mobile.js';
 
 if (document.readyState === 'loading') {
@@ -15,6 +19,12 @@ function setupMobileGame() {
     window.addEventListener('orientationchange', enableMobileCanvasResize);
     window.addEventListener('resize', enableMobileCanvasResize);
     setContext(document.getElementById('gameCanvas').getContext('2d'), document.getElementById('gameCanvas'));
+    document.addEventListener('keydown', handleKeydown); // Attach to document for simulated events
+    // Mobile-specific: set initial game state to STATE_TITLE
+    window.mobileTitleBgBlocks = undefined; // Ensure re-init in drawMobileTitleScreen
+    if (typeof window._mobileGameState === 'undefined') {
+        window._mobileGameState = 0; // 0 = STATE_TITLE
+    }
     setupTouchControls();
     mobileAnimationLoop();
 }
@@ -49,9 +59,6 @@ function setupTouchControls() {
     });
 }
 
-let mobileTitleAnimFrameId = null;
-let lastTitleAnimTime = 0;
-
 function startMobileTitleScreen() {
     if (mobileTitleAnimFrameId) cancelAnimationFrame(mobileTitleAnimFrameId);
     lastTitleAnimTime = performance.now();
@@ -78,6 +85,7 @@ function mobileTitleScreenAnimLoop() {
 
 function mobileAnimationLoop() {
     const state = getGameState();
+    console.log('[Mobile] Animation loop state:', state);
     if (state === STATE_TITLE) {
         stopMobileTitleScreen();
         startMobileTitleScreen();
@@ -88,6 +96,15 @@ function mobileAnimationLoop() {
         hideMobileTitleButtons();
         showMobileControls();
         if (state === STATE_PLAY) {
+            console.log('[Mobile] Drawing game:', {
+                board: getBoard(),
+                current: getCurrent(),
+                currentX: getCurrentX(),
+                currentY: getCurrentY(),
+                next: getNext(),
+                score: getScore(),
+                flashRowsActive: getFlashRowsActive()
+            });
             drawGame(
                 getBoard(),
                 getCurrent(),
@@ -105,6 +122,9 @@ function mobileAnimationLoop() {
     }
     requestAnimationFrame(mobileAnimationLoop);
 }
+
+// Expose mobileAnimationLoop globally so it can be called from game.js
+window.mobileAnimationLoop = mobileAnimationLoop;
 
 function simulateKey(key) {
     document.dispatchEvent(new KeyboardEvent('keydown', { key }));
