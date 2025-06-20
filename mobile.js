@@ -1,7 +1,7 @@
 // Mobile-specific game setup for Slowtris
 // This will be expanded with touch controls and responsive layout
 import { setupGame, getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY } from './game.js';
-import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons } from './draw-mobile.js';
+import { drawGame, drawMobileTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons } from './draw-mobile.js';
 
 export function setupMobileGame() {
     if (document.readyState === 'loading') {
@@ -63,7 +63,7 @@ function setupTouchControls() {
 function animationLoop() {
     const state = getGameState();
     if (state === STATE_TITLE) {
-        drawTitleScreen();
+        drawMobileTitleScreen();
         showMobileTitleButtons();
         hideMobileControls();
     } else {

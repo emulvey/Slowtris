@@ -29,7 +29,7 @@ function resizeCanvasForMobile() {
     canvas.style.height = h + 'px';
 }
 
-export function drawTitleScreen() {
+export function drawMobileTitleScreen() {
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // Animate falling blocks in the background (reuse desktop logic)
@@ -56,13 +56,13 @@ export function drawTitleScreen() {
     ctx.fillText('Slowtris', canvas.width / 2, boardY + 80);
     // Only mobile-specific UI here, no desktop instructions
     if (!titleAnimFrameId) {
-        titleAnimFrameId = requestAnimationFrame(titleScreenAnimLoop);
+        titleAnimFrameId = requestAnimationFrame(mobileTitleScreenAnimLoop);
     }
 }
 
-function titleScreenAnimLoop() {
+function mobileTitleScreenAnimLoop() {
     titleAnimFrameId = null;
-    drawTitleScreen();
+    drawMobileTitleScreen();
 }
 
 function genMobileTitleBgBlock() {
