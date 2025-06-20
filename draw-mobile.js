@@ -17,12 +17,12 @@ function resizeCanvasForMobile() {
     if (!canvas) canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
     const margin = 0.98;
-    // Reduce base canvas size for better fit on mobile
+    // Make canvas smaller for mobile, leaving more space for controls
     let w = window.innerWidth * margin;
-    let h = w * 1.5; // was w * 2, now shorter for more space below
-    if (h > window.innerHeight * margin) {
-        h = window.innerHeight * margin;
-        w = h / 1.5;
+    let h = w * 1.1; // was 1.5, now even shorter for more space below
+    if (h > window.innerHeight * 0.7) { // use only 70% of height for canvas
+        h = window.innerHeight * 0.7;
+        w = h / 1.1;
     }
     canvas.width = Math.round(w);
     canvas.height = Math.round(h);
@@ -116,8 +116,8 @@ function drawMobileTitleBgBlocks() {
 }
 
 function getBoardRect() {
-    // Fit board to 70% width, keep 10:20 aspect, leaving room for side UI
-    const boardW = Math.floor(canvas.width * 0.7); // was 0.9
+    // Fit board to 60% width, keep 10:20 aspect, leaving more room for UI
+    const boardW = Math.floor(canvas.width * 0.6); // was 0.7
     const boardH = Math.floor(boardW * 2);
     const boardX = Math.floor((canvas.width - boardW) / 2);
     const boardY = Math.floor((canvas.height - boardH) / 2);
@@ -306,12 +306,12 @@ function addMobileButtons() {
     controls.style.position = 'fixed';
     controls.style.left = '0';
     controls.style.right = '0';
-    controls.style.bottom = '0';
+    controls.style.bottom = '-10px'; // was 0, now lower
     controls.style.zIndex = '100';
     controls.style.display = 'flex';
     controls.style.justifyContent = 'center';
-    controls.style.gap = '8px'; // was 12px, now tighter
-    controls.style.padding = '8px 0 8px 0'; // was 12px 0 24px 0, now less tall
+    controls.style.gap = '4px'; // was 8px
+    controls.style.padding = '2px 0 2px 0'; // was 8px 0 8px 0
     controls.innerHTML = `
         <button data-key="ArrowLeft">◀️</button>
         <button data-key="ArrowDown">⬇️</button>
@@ -320,9 +320,9 @@ function addMobileButtons() {
         <button data-key="ArrowRight">▶️</button>
     `;
     Array.from(controls.querySelectorAll('button')).forEach(btn => {
-        btn.style.fontSize = '1.5rem'; // was 2rem, now smaller
-        btn.style.padding = '8px 12px'; // was 12px 18px, now smaller
-        btn.style.borderRadius = '10px'; // was 12px
+        btn.style.fontSize = '1.1rem'; // was 1.5rem
+        btn.style.padding = '4px 7px'; // was 8px 12px
+        btn.style.borderRadius = '7px'; // was 10px
         btn.style.border = 'none';
         btn.style.background = '#333';
         btn.style.color = '#fff';
