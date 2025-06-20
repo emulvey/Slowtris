@@ -270,12 +270,13 @@ export function showMobileTitleButtons() {
     container.style.position = 'fixed';
     container.style.left = '0';
     container.style.right = '0';
-    container.style.top = '0';
+    // Move buttons lower on the screen
+    container.style.top = 'calc(50% + 60px)';
     container.style.bottom = '0';
     container.style.zIndex = '9999'; // ensure above all overlays
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
-    container.style.justifyContent = 'center';
+    container.style.justifyContent = 'flex-start';
     container.style.alignItems = 'center';
     container.style.pointerEvents = 'none';
     container.innerHTML = `
