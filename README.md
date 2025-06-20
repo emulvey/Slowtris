@@ -6,9 +6,7 @@ A simple Tetris-like game playable in your browser.
 
 You can play the game directly via GitHub Pages:
 
-[Play Slowtris](https://<your-github-username>.github.io/<your-repo-name>/)
-
-_Replace `<your-github-username>` and `<your-repo-name>` with your actual GitHub username and repository name._
+[Play Slowtris](https://emulvey.github.io/Slowtris/)
 
 ## How to Deploy on GitHub Pages
 
