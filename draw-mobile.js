@@ -17,11 +17,12 @@ function resizeCanvasForMobile() {
     if (!canvas) canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
     const margin = 0.98;
+    // Reduce base canvas size for better fit on mobile
     let w = window.innerWidth * margin;
-    let h = w * 2;
+    let h = w * 1.5; // was w * 2, now shorter for more space below
     if (h > window.innerHeight * margin) {
         h = window.innerHeight * margin;
-        w = h / 2;
+        w = h / 1.5;
     }
     canvas.width = Math.round(w);
     canvas.height = Math.round(h);
@@ -272,13 +273,13 @@ export function showMobileTitleButtons() {
     container.style.position = 'fixed';
     container.style.left = '0';
     container.style.right = '0';
-    // Move buttons lower on the screen
-    container.style.top = 'calc(50% + 60px)';
-    container.style.bottom = '0';
+    // Move buttons lower on the screen, below the play area
+    container.style.top = 'unset';
+    container.style.bottom = '60px'; // was 0, now leaves space above movement controls
     container.style.zIndex = '9999'; // ensure above all overlays
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
-    container.style.justifyContent = 'flex-start';
+    container.style.justifyContent = 'flex-end';
     container.style.alignItems = 'center';
     container.style.pointerEvents = 'none';
     container.innerHTML = `
@@ -289,7 +290,6 @@ export function showMobileTitleButtons() {
     document.getElementById('mobile-start-btn').onclick = (e) => {
         e.stopPropagation();
         console.log('[Mobile] Start button tapped');
-        // Directly call handleKeydown for mobile reliability
         import('./game.js').then(mod => mod.handleKeydown({ key: 'Enter' }));
     };
     document.getElementById('mobile-highscore-btn').onclick = (e) => {
@@ -297,6 +297,42 @@ export function showMobileTitleButtons() {
         console.log('[Mobile] Highscore button tapped');
         import('./game.js').then(mod => mod.handleKeydown({ key: 'h' }));
     };
+}
+
+function addMobileButtons() {
+    if (document.getElementById('mobile-controls')) return;
+    const controls = document.createElement('div');
+    controls.id = 'mobile-controls';
+    controls.style.position = 'fixed';
+    controls.style.left = '0';
+    controls.style.right = '0';
+    controls.style.bottom = '0';
+    controls.style.zIndex = '100';
+    controls.style.display = 'flex';
+    controls.style.justifyContent = 'center';
+    controls.style.gap = '8px'; // was 12px, now tighter
+    controls.style.padding = '8px 0 8px 0'; // was 12px 0 24px 0, now less tall
+    controls.innerHTML = `
+        <button data-key="ArrowLeft">◀️</button>
+        <button data-key="ArrowDown">⬇️</button>
+        <button data-key="ArrowUp">⟳</button>
+        <button data-key=" ">⏬</button>
+        <button data-key="ArrowRight">▶️</button>
+    `;
+    Array.from(controls.querySelectorAll('button')).forEach(btn => {
+        btn.style.fontSize = '1.5rem'; // was 2rem, now smaller
+        btn.style.padding = '8px 12px'; // was 12px 18px, now smaller
+        btn.style.borderRadius = '10px'; // was 12px
+        btn.style.border = 'none';
+        btn.style.background = '#333';
+        btn.style.color = '#fff';
+        btn.style.boxShadow = '0 2px 8px #0006';
+        btn.addEventListener('touchstart', e => {
+            e.preventDefault();
+            simulateKey(btn.dataset.key);
+        });
+    });
+    document.body.appendChild(controls);
 }
 
 export function hideMobileTitleButtons() {
