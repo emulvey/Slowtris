@@ -502,23 +502,13 @@ function drawGameOver() {
 
 // --- Mobile helpers ---
 function placeMobileTetromino() {
+    // Place current piece
     for (let y = 0; y < window._mobileCurrent.shape.length; y++) {
         for (let x = 0; x < window._mobileCurrent.shape[y].length; x++) {
             if (window._mobileCurrent.shape[y][x]) {
                 window._mobileBoard[window._mobileCurrentY + y][window._mobileCurrentX + x] = window._mobileCurrent.type + 1;
             }
         }
-    }
-    // No line clear or game over logic yet (add as needed)
-    // Spawn next tetromino
-    window._mobileCurrent = window._mobileNext;
-    window._mobileNext = nextTetromino();
-    window._mobileCurrentX = 3;
-    window._mobileCurrentY = 0;
-    // Game over detection for mobile
-    if (!isValidPosition(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY, undefined, window._mobileBoard)) {
-        window._mobileGameState = STATE_GAMEOVER;
-        return;
     }
     // Line clear logic for mobile
     let lines = [];
@@ -528,12 +518,20 @@ function placeMobileTetromino() {
         }
     }
     if (lines.length > 0) {
-        // Remove filled lines and add empty ones at the top
         lines.sort((a, b) => b - a);
         for (let i = 0; i < lines.length; i++) {
             window._mobileBoard.splice(lines[i], 1);
-            window._mobileBoard.unshift(Array(window._mobileBoard[0].length).fill(0));
+            window._mobileBoard.unshift(Array(10).fill(0));
         }
-        // Optionally, update score here
+    }
+    // Spawn next tetromino
+    window._mobileCurrent = window._mobileNext;
+    window._mobileNext = nextTetromino();
+    window._mobileCurrentX = 3;
+    window._mobileCurrentY = 0;
+    // Game over detection for mobile
+    if (!isValidPosition(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY, undefined, window._mobileBoard)) {
+        window._mobileGameState = STATE_GAMEOVER;
+        return;
     }
 }

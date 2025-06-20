@@ -37,6 +37,11 @@ function setupMobileGame() {
     document.addEventListener('keydown', handleKeydown);
     window.mobileTitleBgBlocks = undefined;
     if (typeof window._mobileGameState === 'undefined') window._mobileGameState = STATE_TITLE;
+    if (!window._mobileBoard || window._mobileBoard.length !== 20) {
+        if (typeof window.initMobileBoard === 'function') {
+            window.initMobileBoard();
+        }
+    }
     setupTouchControls(canvas);
     mobileAnimationLoop();
 }
