@@ -158,19 +158,24 @@ export function drawTitleScreen(isMobile = false) {
     ctx.save();
     ctx.globalAlpha = 0.5;
     ctx.fillStyle = '#111';
-    ctx.fillRect(40, 60, 10 * 24, 20 * 24);
+    // Dynamically calculate board size and position for current canvas
+    const boardW = Math.floor(canvas.width * 0.75);
+    const boardH = Math.floor(boardW * 2);
+    const boardX = Math.floor((canvas.width - boardW) / 2);
+    const boardY = Math.floor((canvas.height - boardH) / 2);
+    ctx.fillRect(boardX, boardY, boardW, boardH);
     ctx.restore();
     drawTitleBgBlocks();
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 32px "Press Start 2P", Consolas, monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('Slowtris', canvas.width / 2, 140);
+    ctx.fillText('Slowtris', canvas.width / 2, boardY + 80);
     ctx.font = '16px "Press Start 2P", Consolas, monospace';
     if (isMobile) {
-        // Draw nothing here, buttons will be overlaid in mobile.js
+        // Do not show Enter/H text on mobile
     } else {
-        ctx.fillText('Press [Enter] to Start', canvas.width / 2, 220);
-        ctx.fillText('Press [H] for Highscores', canvas.width / 2, 260);
+        ctx.fillText('Press [Enter] to Start', canvas.width / 2, boardY + 160);
+        ctx.fillText('Press [H] for Highscores', canvas.width / 2, boardY + 200);
     }
     // Debug output
     // console.log('drawTitleScreen called');
@@ -313,17 +318,16 @@ export function drawNameEntry(playerName) {
 function resizeCanvasForMobile() {
     const canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
-    // Set width to 98vw, height to maintain aspect ratio (10:13.33)
+    // Use window size to set canvas size, keeping 10:20 aspect ratio
     const margin = 0.98;
     let w = window.innerWidth * margin;
-    let h = w * (640 / 480); // original aspect ratio
+    let h = w * 2;
     if (h > window.innerHeight * margin) {
         h = window.innerHeight * margin;
-        w = h * (480 / 640);
+        w = h / 2;
     }
     canvas.width = Math.round(w);
     canvas.height = Math.round(h);
-    // Optionally, set style to fill parent
     canvas.style.width = w + 'px';
     canvas.style.height = h + 'px';
 }
@@ -334,4 +338,5 @@ if (typeof window !== 'undefined') {
 
 export function enableMobileCanvasResize() {
     resizeCanvasForMobile();
+    setTimeout(resizeCanvasForMobile, 100); // handle late layout
 }

@@ -16,6 +16,8 @@ export function setupMobileGame() {
 function _setupMobileGame() {
     console.log('[Mobile] DOM ready, setting up game');
     enableMobileCanvasResize();
+    window.addEventListener('orientationchange', enableMobileCanvasResize);
+    window.addEventListener('resize', enableMobileCanvasResize);
     setupGame();
     setupTouchControls();
     animationLoop();
