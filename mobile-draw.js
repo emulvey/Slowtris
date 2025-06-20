@@ -22,3 +22,14 @@ export function drawMobileHighscores() {
 export function drawMobileNameEntry() {
     // ...draw name entry overlay...
 }
+
+export function drawTitleScreen() {
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 32px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Slowtris', canvas.width / 2, canvas.height / 2);
+}

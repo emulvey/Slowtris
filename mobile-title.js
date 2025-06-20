@@ -9,7 +9,17 @@ let lastTitleAnimTime = 0;
 export function startMobileTitleScreen() {
     if (mobileTitleAnimFrameId) cancelAnimationFrame(mobileTitleAnimFrameId);
     lastTitleAnimTime = performance.now();
-    mobileTitleScreenAnimLoop();
+    function loop() {
+        if (getGameState() !== STATE_TITLE) return;
+        let now = performance.now();
+        let dt = (now - lastTitleAnimTime) * 0.25;
+        lastTitleAnimTime = now;
+        updateMobileTitleBgBlocks(dt);
+        drawTitleScreen();
+        showMobileTitleButtons();
+        mobileTitleAnimFrameId = requestAnimationFrame(loop);
+    }
+    loop();
 }
 
 export function stopMobileTitleScreen() {
@@ -17,15 +27,4 @@ export function stopMobileTitleScreen() {
         cancelAnimationFrame(mobileTitleAnimFrameId);
         mobileTitleAnimFrameId = null;
     }
-}
-
-function mobileTitleScreenAnimLoop() {
-    if (getGameState() !== STATE_TITLE) return;
-    let now = performance.now();
-    let dt = (now - lastTitleAnimTime) * 0.25;
-    lastTitleAnimTime = now;
-    updateMobileTitleBgBlocks(dt);
-    drawTitleScreen();
-    showMobileTitleButtons();
-    mobileTitleAnimFrameId = requestAnimationFrame(mobileTitleScreenAnimLoop);
 }
