@@ -65,8 +65,10 @@ function animationLoop() {
     if (state === STATE_TITLE) {
         drawTitleScreen();
         showMobileTitleButtons();
+        hideMobileControls();
     } else {
         hideMobileTitleButtons();
+        showMobileControls();
         if (state === STATE_PLAY) {
             drawGame(
                 getBoard(),
@@ -124,4 +126,13 @@ function addMobileButtons() {
         });
     });
     document.body.appendChild(controls);
+}
+
+function showMobileControls() {
+    const controls = document.getElementById('mobile-controls');
+    if (controls) controls.style.display = 'flex';
+}
+function hideMobileControls() {
+    const controls = document.getElementById('mobile-controls');
+    if (controls) controls.style.display = 'none';
 }

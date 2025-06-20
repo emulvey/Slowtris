@@ -272,7 +272,7 @@ export function showMobileTitleButtons() {
     container.style.right = '0';
     container.style.top = '0';
     container.style.bottom = '0';
-    container.style.zIndex = '200';
+    container.style.zIndex = '9999'; // ensure above all overlays
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
     container.style.justifyContent = 'center';
@@ -285,10 +285,12 @@ export function showMobileTitleButtons() {
     document.body.appendChild(container);
     document.getElementById('mobile-start-btn').onclick = (e) => {
         e.stopPropagation();
+        console.log('[Mobile] Start button tapped');
         simulateKey('Enter');
     };
     document.getElementById('mobile-highscore-btn').onclick = (e) => {
         e.stopPropagation();
+        console.log('[Mobile] Highscore button tapped');
         simulateKey('h');
     };
 }
@@ -299,5 +301,6 @@ export function hideMobileTitleButtons() {
 }
 
 function simulateKey(key) {
+    console.log('[Mobile] Simulate key:', key);
     document.dispatchEvent(new KeyboardEvent('keydown', { key }));
 }
