@@ -262,6 +262,9 @@ export function drawNameEntry(playerName) {
     ctx.fillText('Tap to confirm.', canvas.width / 2, 320);
 }
 
+// Export drawMobileTitleScreen as drawTitleScreen for API consistency
+export { drawMobileTitleScreen as drawTitleScreen };
+
 export function showMobileTitleButtons() {
     hideMobileTitleButtons();
     if (document.getElementById('mobile-title-buttons')) return;

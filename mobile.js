@@ -1,7 +1,7 @@
 // Mobile-specific game setup for Slowtris
 // This will be expanded with touch controls and responsive layout
-import { setupGame, getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY } from './game.js';
-import { drawGame, drawMobileTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons } from './draw-mobile.js';
+import { getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY } from './game.js';
+import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons } from './draw-mobile.js';
 
 export function setupMobileGame() {
     if (document.readyState === 'loading') {
@@ -18,7 +18,6 @@ function _setupMobileGame() {
     enableMobileCanvasResize();
     window.addEventListener('orientationchange', enableMobileCanvasResize);
     window.addEventListener('resize', enableMobileCanvasResize);
-    setupGame();
     setContext(document.getElementById('gameCanvas').getContext('2d'), document.getElementById('gameCanvas'));
     setupTouchControls();
     mobileAnimationLoop();
@@ -27,8 +26,6 @@ function _setupMobileGame() {
 function setupTouchControls() {
     const canvas = document.getElementById('gameCanvas');
     let startX = 0, startY = 0, moved = false;
-
-    // Swipe detection for left/right/down
     canvas.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
             startX = e.touches[0].clientX;
@@ -60,7 +57,7 @@ function setupTouchControls() {
 function mobileAnimationLoop() {
     const state = getGameState();
     if (state === STATE_TITLE) {
-        drawMobileTitleScreen();
+        drawTitleScreen();
         showMobileTitleButtons();
         hideMobileControls();
     } else {
@@ -89,76 +86,8 @@ function simulateKey(key) {
     document.dispatchEvent(new KeyboardEvent('keydown', { key }));
 }
 
-function addMobileButtons() {
-    if (document.getElementById('mobile-controls')) return;
-    // Create a simple overlay for left, right, rotate, down, hard drop
-    const controls = document.createElement('div');
-    controls.id = 'mobile-controls';
-    controls.style.position = 'fixed';
-    controls.style.left = '0';
-    controls.style.right = '0';
-    controls.style.bottom = '0';
-    controls.style.zIndex = '100';
-    controls.style.display = 'flex';
-    controls.style.justifyContent = 'center';
-    controls.style.gap = '12px';
-    controls.style.padding = '12px 0 24px 0';
-    controls.innerHTML = `
-        <button data-key="ArrowLeft">◀️</button>
-        <button data-key="ArrowDown">⬇️</button>
-        <button data-key="ArrowUp">⟳</button>
-        <button data-key=" ">⏬</button>
-        <button data-key="ArrowRight">▶️</button>
-    `;
-    Array.from(controls.querySelectorAll('button')).forEach(btn => {
-        btn.style.fontSize = '2rem';
-        btn.style.padding = '12px 18px';
-        btn.style.borderRadius = '12px';
-        btn.style.border = 'none';
-        btn.style.background = '#333';
-        btn.style.color = '#fff';
-        btn.style.boxShadow = '0 2px 8px #0006';
-        btn.addEventListener('touchstart', e => {
-            e.preventDefault();
-            simulateKey(btn.dataset.key);
-        });
-    });
-    document.body.appendChild(controls);
-}
-
 function showMobileControls() {
     if (!document.getElementById('mobile-controls')) addMobileButtons();
     const controls = document.getElementById('mobile-controls');
     if (controls) controls.style.display = 'flex';
-}
-function hideMobileControls() {
-    const controls = document.getElementById('mobile-controls');
-    if (controls) controls.style.display = 'none';
-}
-
-// Check if the device is mobile
-function isMobile() {
-    return /Mobi|Android/i.test(navigator.userAgent);
-}
-
-if (isMobile()) {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            const canvas = document.getElementById('gameCanvas');
-            if (canvas && canvas.getContext) {
-                const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-            }
-            import('./main-mobile.js');
-        });
-    } else {
-        const canvas = document.getElementById('gameCanvas');
-        if (canvas && canvas.getContext) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-        import('./main-mobile.js');
-    }
-} else {
-    import('./main-desktop.js');
 }

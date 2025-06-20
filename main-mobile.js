@@ -1,3 +1,4 @@
+import { setContext, drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize } from './draw-mobile.js';
 import { setupMobileGame } from './mobile.js';
 
 if (document.readyState === 'loading') {
