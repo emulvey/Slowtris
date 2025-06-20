@@ -2,8 +2,8 @@
 let mobileTitleAnimFrameId = null;
 let lastTitleAnimTime = 0;
 
-import { getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY, handleKeydown } from './game.js';
-import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons, updateMobileTitleBgBlocks } from './draw-mobile.js';
+import { getGameState, getBoard, getCurrent, getCurrentX, getCurrentY, getNext, getScore, getFlashRowsActive, getPlayerName, STATE_TITLE, STATE_PLAY, STATE_HIGHSCORES, STATE_NAME_ENTRY, STATE_GAMEOVER, handleKeydown } from './game.js';
+import { drawGame, drawTitleScreen, drawHighscores, drawNameEntry, drawMobileGameOver, enableMobileCanvasResize, setContext, showMobileTitleButtons, hideMobileTitleButtons, updateMobileTitleBgBlocks } from './draw-mobile.js';
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
@@ -83,6 +83,10 @@ function mobileTitleScreenAnimLoop() {
     mobileTitleAnimFrameId = requestAnimationFrame(mobileTitleScreenAnimLoop);
 }
 
+// --- Mobile Game Over Tap Handler ---
+import { STATE_GAMEOVER, STATE_TITLE } from './game.js';
+import { drawMobileGameOver } from './draw-mobile.js';
+
 function mobileAnimationLoop() {
     const state = getGameState();
     console.log('[Mobile] Animation loop state:', state);
@@ -96,15 +100,6 @@ function mobileAnimationLoop() {
         hideMobileTitleButtons();
         showMobileControls();
         if (state === STATE_PLAY) {
-            console.log('[Mobile] Drawing game:', {
-                board: getBoard(),
-                current: getCurrent(),
-                currentX: getCurrentX(),
-                currentY: getCurrentY(),
-                next: getNext(),
-                score: getScore(),
-                flashRowsActive: getFlashRowsActive()
-            });
             drawGame(
                 getBoard(),
                 getCurrent(),
@@ -118,13 +113,24 @@ function mobileAnimationLoop() {
             drawHighscores();
         } else if (state === STATE_NAME_ENTRY) {
             drawNameEntry(getPlayerName());
+        } else if (state === STATE_GAMEOVER) {
+            drawMobileGameOver(getScore());
+            hideMobileControls();
         }
     }
     requestAnimationFrame(mobileAnimationLoop);
 }
 
-// Expose mobileAnimationLoop globally so it can be called from game.js
 window.mobileAnimationLoop = mobileAnimationLoop;
+
+if (typeof window._mobileGameOverTapHandlerAttached === 'undefined') {
+    window._mobileGameOverTapHandlerAttached = true;
+    document.addEventListener('touchend', function gameOverTapHandler() {
+        if (getGameState() === STATE_GAMEOVER) {
+            window._mobileGameState = STATE_TITLE;
+        }
+    });
+}
 
 function simulateKey(key) {
     document.dispatchEvent(new KeyboardEvent('keydown', { key }));
@@ -133,45 +139,21 @@ function simulateKey(key) {
 function showMobileControls() {
     if (!document.getElementById('mobile-controls')) addMobileButtons();
     const controls = document.getElementById('mobile-controls');
-    if (controls) controls.style.display = 'flex';
-}
-function hideMobileControls() {
-    const controls = document.getElementById('mobile-controls');
-    if (controls) controls.style.display = 'none';
+    if (controls.style.display === 'none' || controls.style.display === '') {
+        controls.style.display = 'block';
+        setTimeout(() => {
+            controls.classList.add('fade-in');
+        }, 10);
+    }
 }
 
-function addMobileButtons() {
-    if (document.getElementById('mobile-controls')) return;
-    const controls = document.createElement('div');
-    controls.id = 'mobile-controls';
-    controls.style.position = 'fixed';
-    controls.style.left = '0';
-    controls.style.right = '0';
-    controls.style.bottom = '0';
-    controls.style.zIndex = '100';
-    controls.style.display = 'flex';
-    controls.style.justifyContent = 'center';
-    controls.style.gap = '12px';
-    controls.style.padding = '12px 0 24px 0';
-    controls.innerHTML = `
-        <button data-key="ArrowLeft">◀️</button>
-        <button data-key="ArrowDown">⬇️</button>
-        <button data-key="ArrowUp">⟳</button>
-        <button data-key=" ">⏬</button>
-        <button data-key="ArrowRight">▶️</button>
-    `;
-    Array.from(controls.querySelectorAll('button')).forEach(btn => {
-        btn.style.fontSize = '2rem';
-        btn.style.padding = '12px 18px';
-        btn.style.borderRadius = '12px';
-        btn.style.border = 'none';
-        btn.style.background = '#333';
-        btn.style.color = '#fff';
-        btn.style.boxShadow = '0 2px 8px #0006';
-        btn.addEventListener('touchstart', e => {
-            e.preventDefault();
-            simulateKey(btn.dataset.key);
-        });
-    });
-    document.body.appendChild(controls);
+function hideMobileControls() {
+    const controls = document.getElementById('mobile-controls');
+    if (controls.style.display !== 'none') {
+        controls.classList.remove('fade-in');
+        controls.style.display = 'none';
+    }
 }
+
+// Initial call to kick things off
+mobileAnimationLoop();

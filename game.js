@@ -5,7 +5,7 @@ import { loadHighscores, saveHighscores, checkHighscore, insertHighscore, getHig
 // --- State constants ---
 export const STATE_TITLE = 0;
 export const STATE_PLAY = 1;
-export const STATE_GAMEOVER = 2;
+export const STATE_GAMEOVER = 5; // Add this for mobile game over
 export const STATE_HIGHSCORES = 3;
 export const STATE_NAME_ENTRY = 4;
 
@@ -515,4 +515,8 @@ function placeMobileTetromino() {
     window._mobileNext = nextTetromino();
     window._mobileCurrentX = 3;
     window._mobileCurrentY = 0;
+    // Game over detection for mobile
+    if (!isValidPosition(window._mobileCurrent, window._mobileCurrentX, window._mobileCurrentY, undefined, window._mobileBoard)) {
+        window._mobileGameState = STATE_GAMEOVER;
+    }
 }

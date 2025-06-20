@@ -16,13 +16,14 @@ export function enableMobileCanvasResize() {
 function resizeCanvasForMobile() {
     if (!canvas) canvas = document.getElementById('gameCanvas');
     if (!canvas) return;
-    const margin = 0.98;
-    // Make canvas smaller for mobile, leaving more space for controls
+    const margin = 0.99;
+    // Use more of the vertical space for the canvas
     let w = window.innerWidth * margin;
-    let h = w * 1.1; // was 1.5, now even shorter for more space below
-    if (h > window.innerHeight * 0.7) { // use only 70% of height for canvas
-        h = window.innerHeight * 0.7;
-        w = h / 1.1;
+    let h = window.innerHeight * 0.85; // Use 85% of height for canvas
+    if (h / w > 2) {
+        h = w * 2; // Keep aspect ratio no taller than 2:1
+    } else {
+        w = h / 2;
     }
     canvas.width = Math.round(w);
     canvas.height = Math.round(h);
@@ -343,4 +344,22 @@ export function hideMobileTitleButtons() {
 function simulateKey(key) {
     console.log('[Mobile] Simulate key:', key);
     document.dispatchEvent(new KeyboardEvent('keydown', { key }));
+}
+
+export function drawMobileGameOver(score) {
+    if (!ctx || !canvas) return;
+    ctx.save();
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 36px Segoe UI, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 20);
+    ctx.font = '24px Segoe UI, Arial, sans-serif';
+    ctx.fillText('Score: ' + score, canvas.width / 2, canvas.height / 2 + 20);
+    ctx.font = '18px Segoe UI, Arial, sans-serif';
+    ctx.fillText('Tap to return to title', canvas.width / 2, canvas.height / 2 + 60);
+    ctx.restore();
 }
