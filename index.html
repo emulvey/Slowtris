@@ -2,16 +2,224 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#090e1a">
+    <meta name="description" content="Slowtris — Turn-based Tetris. No timer, pure strategy.">
     <title>Slowtris</title>
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
     <link rel="stylesheet" href="style.css">
-    <!-- Arcade font -->
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-    <canvas id="gameCanvas" width="480" height="640"></canvas>
+    <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+    <div id="app" class="app">
+        <header class="top-bar">
+            <button id="btn-home" class="brand" type="button" title="Title Screen" aria-label="Return to title screen">
+                <span class="brand-blocks" aria-hidden="true">
+                    <i style="background:#22d3ee"></i>
+                    <i style="background:#c084fc"></i>
+                    <i style="background:#facc15"></i>
+                    <i style="background:#fb7185"></i>
+                </span>
+                <span class="brand-text">SLOWTRIS</span>
+            </button>
+
+            <div class="top-actions">
+                <button id="btn-sfx" class="icon-btn" type="button" title="Toggle Sound Effects (M)" aria-label="Toggle sound effects" aria-pressed="true">
+                    <svg class="ico ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                    <svg class="ico ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+                </button>
+                <button id="btn-music" class="icon-btn" type="button" title="Toggle Ambient Music" aria-label="Toggle ambient music" aria-pressed="true">
+                    <svg class="ico ico-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                    <svg class="ico ico-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                </button>
+                <button id="btn-touch" class="icon-btn" type="button" title="Toggle On-Screen Controls" aria-label="Toggle on-screen controls" aria-pressed="false">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 12h4"/><path d="M8 10v4"/><circle cx="15" cy="11" r="1" fill="currentColor"/><circle cx="18" cy="13" r="1" fill="currentColor"/></svg>
+                </button>
+                <button id="btn-pause" class="icon-btn hidden" type="button" title="Pause (P / Esc)" aria-label="Pause game">
+                    <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="game-layout">
+            <aside class="hud-panel" aria-label="Game status">
+                <section class="hud-card hud-next">
+                    <span class="hud-label">NEXT</span>
+                    <canvas id="nextCanvas" width="88" height="56" aria-label="Next piece"></canvas>
+                </section>
+
+                <section class="hud-card hud-score">
+                    <span class="hud-label">SCORE</span>
+                    <span id="hud-score" class="hud-value">0</span>
+                    <span class="hud-sub">BEST <strong id="hud-best">0</strong></span>
+                </section>
+
+                <section class="hud-card hud-turn" id="hud-turn-card">
+                    <span id="hud-turn-label" class="hud-label">DROP IN</span>
+                    <div id="hud-turn-pips" class="turn-pips" aria-live="polite">
+                        <span class="pip"></span>
+                        <span class="pip"></span>
+                    </div>
+                </section>
+
+                <section class="hud-card hud-stats">
+                    <div class="stat-pair">
+                        <span class="hud-label">LINES</span>
+                        <span id="hud-lines" class="hud-value-sm">0</span>
+                    </div>
+                    <div class="stat-pair">
+                        <span class="hud-label">TURNS</span>
+                        <span id="hud-turns" class="hud-value-sm">0</span>
+                    </div>
+                </section>
+
+                <section class="hud-card hud-controls-legend">
+                    <span class="hud-label">KEYS</span>
+                    <div class="key-list">
+                        <div><kbd>←</kbd><kbd>→</kbd> Move</div>
+                        <div><kbd>↑</kbd><kbd>Z</kbd> Rotate</div>
+                        <div><kbd>↓</kbd> Step / Lock</div>
+                        <div><kbd>Space</kbd> Drop</div>
+                        <div><kbd>P</kbd> Pause</div>
+                    </div>
+                </section>
+            </aside>
+
+            <section class="board-stage" aria-label="Playfield">
+                <div id="boardFrame" class="board-frame">
+                    <canvas id="boardCanvas" width="240" height="480"></canvas>
+                </div>
+            </section>
+        </main>
+
+        <nav id="touchControls" class="touch-controls hidden" aria-label="Touch controls">
+            <div class="touch-group">
+                <button class="touch-btn" data-action="left" type="button" aria-label="Move left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <button class="touch-btn" data-action="down" type="button" aria-label="Step down">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <button class="touch-btn" data-action="right" type="button" aria-label="Move right">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+            </div>
+            <div class="touch-group">
+                <button class="touch-btn" data-action="rotateCCW" type="button" aria-label="Rotate counter-clockwise">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                </button>
+                <button class="touch-btn" data-action="rotateCW" type="button" aria-label="Rotate clockwise">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+                </button>
+                <button class="touch-btn touch-btn-accent" data-action="hardDrop" type="button" aria-label="Hard drop">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 7 12 12 17 7"/><polyline points="7 13 12 18 17 13"/><line x1="5" y1="21" x2="19" y2="21"/></svg>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Overlay Screens -->
+        <div id="overlayLayer" class="overlay-layer">
+            <!-- Title Screen -->
+            <section id="screen-title" class="overlay-card" aria-labelledby="title-heading">
+                <div class="title-logo">
+                    <div class="title-accent" aria-hidden="true">
+                        <span style="background:#22d3ee"></span>
+                        <span style="background:#3b82f6"></span>
+                        <span style="background:#c084fc"></span>
+                        <span style="background:#fb923c"></span>
+                        <span style="background:#facc15"></span>
+                        <span style="background:#4ade80"></span>
+                        <span style="background:#fb7185"></span>
+                    </div>
+                    <h1 id="title-heading">SLOWTRIS</h1>
+                    <p class="tagline">Turn-based Tetris · No timer, pure strategy</p>
+                </div>
+
+                <div class="rules-pill">
+                    <span>Every <strong>2 moves</strong> drops 1 row</span>
+                    <span><strong>2 tuck moves</strong> before lock</span>
+                </div>
+
+                <div id="title-best-wrap" class="best-badge hidden">
+                    BEST SCORE <strong id="title-best">0</strong>
+                </div>
+
+                <div class="btn-stack">
+                    <button id="btn-start" class="btn btn-primary" type="button">PLAY</button>
+                    <button id="btn-highscores" class="btn btn-secondary" type="button">HIGHSCORES</button>
+                </div>
+
+                <p class="hint-text">Tap, swipe, or press <kbd>Enter</kbd></p>
+            </section>
+
+            <!-- Pause Screen -->
+            <section id="screen-pause" class="overlay-card hidden" aria-labelledby="pause-heading">
+                <h2 id="pause-heading">PAUSED</h2>
+                <div class="btn-stack">
+                    <button id="btn-resume" class="btn btn-primary" type="button">RESUME</button>
+                    <button id="btn-restart" class="btn btn-secondary" type="button">RESTART</button>
+                    <button id="btn-pause-title" class="btn btn-ghost" type="button">TITLE SCREEN</button>
+                </div>
+            </section>
+
+            <!-- Game Over Screen -->
+            <section id="screen-gameover" class="overlay-card hidden" aria-labelledby="gameover-heading">
+                <h2 id="gameover-heading" class="danger-text">GAME OVER</h2>
+                <div class="summary-grid">
+                    <div class="summary-item">
+                        <span class="hud-label">SCORE</span>
+                        <strong id="go-score">0</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span class="hud-label">LINES</span>
+                        <strong id="go-lines">0</strong>
+                    </div>
+                    <div class="summary-item">
+                        <span class="hud-label">TURNS</span>
+                        <strong id="go-turns">0</strong>
+                    </div>
+                </div>
+                <div class="btn-stack">
+                    <button id="btn-play-again" class="btn btn-primary" type="button">PLAY AGAIN</button>
+                    <button id="btn-go-highscores" class="btn btn-secondary" type="button">HIGHSCORES</button>
+                    <button id="btn-go-title" class="btn btn-ghost" type="button">TITLE SCREEN</button>
+                </div>
+            </section>
+
+            <!-- New High Score Name Entry -->
+            <section id="screen-name" class="overlay-card hidden" aria-labelledby="name-heading">
+                <h2 id="name-heading" class="gold-text">NEW HIGH SCORE!</h2>
+                <div id="name-score" class="big-score">0</div>
+                <form id="name-form" class="name-form">
+                    <label for="name-input" class="hud-label">ENTER YOUR TAG (UP TO 4 CHARS)</label>
+                    <input
+                        id="name-input"
+                        class="name-input"
+                        type="text"
+                        maxlength="4"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        spellcheck="false"
+                        placeholder="PLAY"
+                        aria-label="Enter up to 4 characters for your high score tag"
+                    >
+                    <button class="btn btn-primary" type="submit">SAVE SCORE</button>
+                </form>
+            </section>
+
+            <!-- Highscores Table -->
+            <section id="screen-highscores" class="overlay-card overlay-card-wide hidden" aria-labelledby="hs-heading">
+                <h2 id="hs-heading">HIGHSCORES</h2>
+                <ol id="highscore-list" class="highscore-list"></ol>
+                <div class="btn-row">
+                    <button id="btn-hs-play" class="btn btn-primary" type="button">PLAY</button>
+                    <button id="btn-hs-back" class="btn btn-secondary" type="button">BACK</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
     <script type="module" src="main.js"></script>
-    <!-- Device detection and script selection is now handled in main.js -->
-    <!-- <script> ...device detection... </script> -->
 </body>
 </html>
